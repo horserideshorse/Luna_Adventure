@@ -2,7 +2,10 @@
 #
 # Get latest from https://github.com/github/gitignore/blob/main/Unity.gitignore
 #
+.plastic/
+.vsconfig
 .utmp/
+/[Aa]ssets/[Gg]ame[Rr]esource/
 /[Ll]ibrary/
 /[Tt]emp/
 /[Oo]bj/
