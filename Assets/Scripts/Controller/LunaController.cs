@@ -356,8 +356,11 @@ public class LunaController : ControllerBase
     }
     private void OnTriggerExit2D(Collider2D collision)
     {
-        isDialog = false;
-        UIManager.Instance.ShowOrHidePressTip(dialog, isDialog);
+        if (collision.transform.GetComponent<DialogBase>() != null)
+        {
+            isDialog = false;
+            UIManager.Instance.ShowOrHidePressTip(dialog, isDialog);
+        }
     }
     public void OnPanleButtonClicked()
     {
