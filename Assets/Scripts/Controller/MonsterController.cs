@@ -39,9 +39,13 @@ public class MonsterController : ControllerBase
     private void RandomMove()
     {
         timer = RandomInt(1, 3);
+
         moveSpeed = RandomInt(-1, 2);
         direction.x = RandomInt(-1, 1);
         direction.y = RandomInt(-1, 1);
+
+        animatorOutBattle.SetFloat("LookX", direction.x);
+        animatorOutBattle.SetFloat("LookY", direction.y);
     }
     public IEnumerator MonsterAttack(ControllerBase target)
     {

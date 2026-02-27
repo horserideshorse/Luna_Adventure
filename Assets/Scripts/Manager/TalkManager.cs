@@ -14,30 +14,56 @@ public class TalkManager : ManagerBase<TalkManager>
     public void LoadDialog(DialogBase dialog)
     {
         if (_dialogBase != null){
-            
             _dialogBase.OnContentChange -= OnContentChange;
+            _dialogBase.OnInterSelfChange -= OnInterSelfChange;
+            _dialogBase.OnInterTargetChange -= OnInterTargetChange;
         }
 
         _dialogBase = dialog;
         _npcDialogs = _dialogBase.NpcDialog;
         _dialogBase.OnContentChange += OnContentChange;
-        
+        _dialogBase.OnInterSelfChange += OnInterSelfChange;
+        _dialogBase.OnInterTargetChange += OnInterTargetChange;
+
         OnContentChange(_dialogBase.ConIndex);
     }
+    public void ExitDialog(DialogBase dialog)
+    {
+        if (_dialogBase != null)
+        {
+            _dialogBase.OnContentChange -= OnContentChange;
+            _dialogBase.OnInterSelfChange -= OnInterSelfChange;
+            _dialogBase.OnInterTargetChange -= OnInterTargetChange;
+        }
+    }
+
     private void OnContentChange(int temp){
         _diaIndex = _dialogBase.DiaIndex;
         _conIndex = _dialogBase.ConIndex;
         DisPlayDialog();
     }
+    private void OnInterSelfChange(int interacteState)
+    {
+        _lunaController.LunaMovement = (LunaController.E_LunaMovement)interacteState;
+    }
+
+    private void OnInterTargetChange(int temp)
+    {
+        if(_dialogBase.gameObject.GetComponent<CharacterBase>())
+        _dialogBase.gameObject.GetComponent<CharacterBase>().InteracteAni(temp);
+    }
+
     public void DisPlayDialog()
     {
-        if (_dialogBase.DiaIndex == -1){
+        if (_dialogBase.ConIndex == -1){
             UIManager.Instance.ShowDialog();
+            Instance.ExitDialog(_dialogBase);
+            _lunaController.IsDialog = false;
         }
         else {
-            
             DialogInfo dialog = _npcDialogs[_diaIndex][_conIndex];
             UIManager.Instance.ShowDialog(dialog.name, dialog.content);
+            _lunaController.IsDialog = true;
         } 
     }
 }

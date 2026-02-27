@@ -72,14 +72,15 @@ public class UIManager : ManagerBase<UIManager>
         {
             _lunaController.CanControll = false;
             talkPanle.SetActive(true);
-            if (name == "Luna")
+
+            int showSprite = name switch
             {
-                charcaterSprite.sprite = characterSprites[0];
-            }
-            else
-            {
-                charcaterSprite.sprite = characterSprites[1];
-            }
+                "Luna" => 0,
+                "Nala" => 1,
+                "Dog" => 2,
+                _ => 0
+            }; charcaterSprite.sprite = characterSprites[showSprite];
+
             charcaterSprite.SetNativeSize();
             textName.text = name;
             textContent.text = content;

@@ -18,6 +18,5 @@ public class LunaDialog : DialogBase
         };
         _dialogIndex = 0;
         _contentIndex = 0;
-        Debug.Log(NpcDialog);
     }
 }

@@ -5,7 +5,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
-public abstract class ControllerBase : MonoBehaviour
+public abstract class ControllerBase : CharacterBase
 {
     [Header(" Ù–‘")]
     [SerializeField] protected int maxHP;
@@ -13,22 +13,16 @@ public abstract class ControllerBase : MonoBehaviour
     [SerializeField] protected float atkSpeed;
     protected int currentHP;
     protected int currentMP;
-    protected float moveSpeed;
-    protected Vector3 position;
-    protected Vector3 direction;
     protected Vector3 initPostionInBattle;
     protected Transform transformInBattle;
-    protected Transform transformOutBattle;
+    protected Rigidbody2D rigidbody2d;
 
     [Header("UI")]
     [SerializeField] protected Image hpMaskInBattle;
     [SerializeField] protected Image mpMaskInBattle;
     [SerializeField] protected Animator animatorInBattle;
-    [SerializeField] protected Animator animatorOutBattle;
-    protected float hpWidthInBattle;
-    protected float mpWidthInBattle;
 
-    protected Rigidbody2D rigidbody2d;
+    
     public int HP { get { return currentHP; } set { currentHP = value; } }
     public int MP { get { return currentMP; } set { currentMP = value; } }
     public int MaxHP { get { return maxHP; } }
@@ -40,16 +34,16 @@ public abstract class ControllerBase : MonoBehaviour
     public Image HpMask { get { return hpMaskInBattle; } }
     public Image MpMask { get { return mpMaskInBattle; } }
 
-    protected virtual void Awake()
+    protected override void Awake()
     {
+        base.Awake();
         transformInBattle = animatorInBattle.GetComponent<Transform>();
-        transformOutBattle = transform;
         initPostionInBattle = transformInBattle.localPosition;
         hpWidthInBattle = hpMaskInBattle.rectTransform.rect.width;
         mpWidthInBattle = mpMaskInBattle.rectTransform.rect.width;
     }
 
-    protected virtual void Start()
+    protected override void Start()
     {
         rigidbody2d = GetComponent<Rigidbody2D>();
         ChangeHP(this, MaxHP);
@@ -67,20 +61,11 @@ public abstract class ControllerBase : MonoBehaviour
             (changer.GetComponent<ControllerBase>().MP + amount, 0, changer.GetComponent<ControllerBase>().MaxHP);
         UIManager.Instance.SetMpValue(changer);
     }
-    public abstract IEnumerator Hurt();
-    public virtual IEnumerator Death()
+    public override IEnumerator Hurt() { yield return null; }
+    public override IEnumerator Death()
     {
         Destroy(gameObject);
         DOTween.Kill(gameObject.GetComponent<SpriteRenderer>());
         yield return null;
-    }
-
-    protected virtual void FixedUpdate()
-    {
-
-    }
-    protected virtual void Update()
-    {
-
     }
 }

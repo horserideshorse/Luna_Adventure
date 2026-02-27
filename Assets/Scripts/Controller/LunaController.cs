@@ -14,7 +14,9 @@ public class LunaController : ControllerBase
         RUN,
         CLIMB,
         CLIMB_IDLE,
-        JUMP
+        JUMP,
+        PET,
+        LOOK
     }
     public enum E_LunaBattle
     {
@@ -32,10 +34,12 @@ public class LunaController : ControllerBase
     private E_LunaMovement lunaMovement;
     private E_LunaBattle lunaBattle;
 
-    private bool isClimb;
-    private bool isJump;
-    private bool canControl;
-    private bool isDialog;
+    private bool isClimb;      //爬
+    private bool isJump;       //跳
+    private bool canControl;   //可控制
+    private bool hasDialog;    //有对话
+    private bool isDialog;     //正在对话
+
 
     private float WALKSPEED = 3;
     private float RUNSPEED = 6;
@@ -57,11 +61,13 @@ public class LunaController : ControllerBase
     //[SerializeField] private int skillDamage = -2;
     //[SerializeField] private int heal = 2;
 
-    public E_LunaMovement LunaMovement { get { return lunaMovement; } }
+    public E_LunaMovement LunaMovement { get => lunaMovement; set { lunaMovement = value; } }
     public E_LunaBattle LunaBattle { get { return lunaBattle; } }
     public float HpWidthMap { get { return hpWidthInMap; } }
     public float MpWidthMap { get { return mpWidthInMap; } }
     public bool CanControll { get { return canControl; }set {canControl = value; } }
+    public bool IsDialog { get => isDialog; set { isDialog = value; } }
+
 
     protected override void Awake()
     {
@@ -75,9 +81,8 @@ public class LunaController : ControllerBase
     }
     protected override void Start()
     {
-        
         TalkManager.Instance.LoadDialog(dialog);
-        
+
         ChangeHP(this, MaxHP);
         ChangeMP(this, MaxMP);
 
@@ -86,6 +91,7 @@ public class LunaController : ControllerBase
 
         isClimb = false;
         isJump = false;
+        hasDialog = false;
         isDialog = false;
 
         MOVESPEED = 3;
@@ -94,6 +100,12 @@ public class LunaController : ControllerBase
 
     protected override void Update()
     {
+        moveSpeed = moveValue.magnitude * MOVESPEED;
+        if (canControl)
+        {
+            InputHandle();
+        }
+
         //方向
         if (moveValue.magnitude > 0.1f)
         {
@@ -101,9 +113,7 @@ public class LunaController : ControllerBase
             animatorOutBattle.SetFloat("LookY", moveValue.y);
         }
 
-        moveSpeed = moveValue.magnitude * MOVESPEED;
-        InputHandle();
-        MoveAni();
+        ChangeMoveWay();
     }
 
     protected override void FixedUpdate()
@@ -112,17 +122,6 @@ public class LunaController : ControllerBase
         position += moveSpeed * direction * Time.fixedDeltaTime; //Time.deltaTime 1/当前帧率
         rigidbody2d.MovePosition(position); //通过刚体移动物体
     }
-
-    public void Climb(bool isClimb)
-    {
-        this.isClimb = isClimb;
-    }
-
-    public void Jump(bool isJump)
-    {
-        this.isJump = isJump;
-    }
-
     private void InputHandle()
     {
         direction.x = Input.GetAxisRaw("Horizontal");   //获取水平输入
@@ -136,7 +135,7 @@ public class LunaController : ControllerBase
         if (Input.GetKeyDown(KeyCode.LeftShift)) MOVESPEED = RUNSPEED;
         else if (Input.GetKeyUp(KeyCode.LeftShift)) MOVESPEED = WALKSPEED;
 
-        if (Input.GetKeyDown(KeyCode.E) && isDialog) PressTip();
+        if (Input.GetKeyDown(KeyCode.E) && hasDialog) PressTip();
     }
     public IEnumerator LunaAttack(MonsterController target)
     {
@@ -209,135 +208,95 @@ public class LunaController : ControllerBase
 
     public void BattleAni(E_LunaBattle lunaBS)
     {
-        this.lunaBattle = lunaBS;
-        switch (lunaBS) //状态机
+        lunaBattle = lunaBS;
+        int state = lunaBattle switch
         {
-            case E_LunaBattle.IDLE:
-                animatorInBattle.SetInteger("State", 0);
-                break;
-            case E_LunaBattle.MOVEFORWARD:
-                animatorInBattle.SetInteger("State", 1);
-                animatorInBattle.SetFloat("Dir", 1);
-                break;
-            case E_LunaBattle.MOVEBACK:
-                animatorInBattle.SetInteger("State", 1);
-                animatorInBattle.SetFloat("Dir", -1);
-                break;
-            case E_LunaBattle.ATTACK:
-                animatorInBattle.SetInteger("State", 2);
-                break;
-            case E_LunaBattle.DEFEND:
-                animatorInBattle.SetInteger("State", 3);
-                break;
-            case E_LunaBattle.HEAL:
-                animatorInBattle.SetInteger("State", 4);
-                break;
-            case E_LunaBattle.SKILL:
-                animatorInBattle.SetInteger("State", 5);
-                break;
-            case E_LunaBattle.HIT:
-                animatorInBattle.SetInteger("State", 6);
-                break;
-            case E_LunaBattle.DIE:
-                animatorInBattle.SetInteger("State", 7);
-                break;
-            case E_LunaBattle.RUN:
-                animatorInBattle.SetInteger("State", 1);
-                animatorInBattle.SetFloat("Dir", -1);
-                break;
+            E_LunaBattle.IDLE => 0,
+            E_LunaBattle.MOVEFORWARD => 1,
+            E_LunaBattle.MOVEBACK => 1,
+            E_LunaBattle.ATTACK => 2,
+            E_LunaBattle.DEFEND => 3,
+            E_LunaBattle.HEAL => 4,
+            E_LunaBattle.SKILL => 5,
+            E_LunaBattle.HIT => 6,
+            E_LunaBattle.DIE => 7,
+            E_LunaBattle.RUN => 1,
+            _ => 0
+        }; animatorInBattle.SetInteger("State", state);
+
+        if(state == 1){
+            int dir = lunaBattle switch
+            {
+                E_LunaBattle.MOVEFORWARD => 1,
+                E_LunaBattle.MOVEBACK => -1,
+                E_LunaBattle.RUN => -1,
+                _ => 1
+            }; animatorInBattle.SetFloat("Dir", dir);
         }
     }
-    private void MoveAni()
+
+    private void ChangeMoveWay()
     {
-        switch (lunaMovement) //状态机
+        if (isDialog)
         {
-            case E_LunaMovement.IDLE:
-                if (moveSpeed > 1)
-                {
-                    lunaMovement = E_LunaMovement.WALK;
-                    animatorOutBattle.SetInteger("moveWay", 1);
-                }
-                break;
-
-            case E_LunaMovement.WALK:
-                if (moveSpeed <= 1)
-                {
-                    lunaMovement = E_LunaMovement.IDLE;
-                    animatorOutBattle.SetInteger("moveWay", 0);
-                }
-                else if (moveSpeed > 3.1f)
-                {
-                    lunaMovement = E_LunaMovement.RUN;
-                    animatorOutBattle.SetInteger("moveWay", 2);
-                }
-                else if (isClimb)
-                {
-                    lunaMovement = E_LunaMovement.CLIMB;
-                    animatorOutBattle.SetInteger("moveWay", 3);
-                }
-                else if (isJump)
-                {
-                    lunaMovement = E_LunaMovement.JUMP;
-                    rigidbody2d.simulated = false;
-                    animatorOutBattle.SetInteger("moveWay", 5);
-                }
-                break;
-
-            case E_LunaMovement.RUN:
-                if (moveSpeed <= 3.1f)
-                {
-                    lunaMovement = E_LunaMovement.WALK;
-                    animatorOutBattle.SetInteger("moveWay", 1);
-                }
-                else if (isClimb)
-                {
-                    lunaMovement = E_LunaMovement.CLIMB;
-                    animatorOutBattle.SetInteger("moveWay", 3);
-                }
-                else if (isJump)
-                {
-                    lunaMovement = E_LunaMovement.JUMP;
-                    rigidbody2d.simulated = false;
-                    animatorOutBattle.SetInteger("moveWay", 5);
-                }
-                break;
-
-            case E_LunaMovement.CLIMB:
-                if (!isClimb)
-                {
-                    lunaMovement = E_LunaMovement.WALK;
-                    animatorOutBattle.SetInteger("moveWay", 1);
-                }
-                if (moveSpeed <= 1)
-                {
-                    lunaMovement = E_LunaMovement.CLIMB_IDLE;
-                    animatorOutBattle.SetInteger("moveWay", 4);
-                }
-                break;
-
-            case E_LunaMovement.CLIMB_IDLE:
-                if (moveSpeed > 1)
-                {
-                    lunaMovement = E_LunaMovement.CLIMB;
-                    animatorOutBattle.SetInteger("moveWay", 3);
-                }
-                break;
-
-            case E_LunaMovement.JUMP:
-                if (!isJump)
-                {
-                    lunaMovement = E_LunaMovement.WALK;
-                    rigidbody2d.simulated = true;
-                    animatorOutBattle.SetInteger("moveWay", 1);
-                }
-                break;
-
-            default:
-                lunaMovement = E_LunaMovement.IDLE;
-                animatorOutBattle.SetInteger("moveWay", 0);
-                break;
+            InteracteAni((int)LunaMovement);
+            return;
+        }
+        if (isJump && !isClimb && !isDialog) {
+            MoveAni(5);
+            return;
+        }
+        if (isClimb && !isJump && !isDialog) {
+            if (moveSpeed > 1f)
+                MoveAni(3);
+            else
+                MoveAni(4);
+            return;
+        }
+        if (moveSpeed <= 1f) {
+            MoveAni(0);
+        }
+        else if (MOVESPEED == WALKSPEED) {
+            MoveAni(1);
+        }
+        else if (MOVESPEED == RUNSPEED) {
+            MoveAni(2);
         }
     }
+    public void Climb(bool isClimb)
+    {
+        this.isClimb = isClimb;
+    }
+
+    public void Jump(bool isJump)
+    {
+        this.isJump = isJump;
+    }
+    private void MoveAni(int movement = 0)
+    {
+        lunaMovement = movement switch
+        {
+            0 => E_LunaMovement.IDLE,
+            1 => E_LunaMovement.WALK,
+            2 => E_LunaMovement.RUN,
+            3 => E_LunaMovement.CLIMB,
+            4 => E_LunaMovement.CLIMB_IDLE,
+            5 => E_LunaMovement.JUMP,
+            7 => E_LunaMovement.LOOK,
+            _ => E_LunaMovement.IDLE
+        }; animatorOutBattle.SetInteger("moveWay", movement);
+    }
+
+    public override void InteracteAni(int isInteracte = 7)
+    {
+        lunaMovement = isInteracte switch
+        {
+            6 => E_LunaMovement.PET,
+            7 => E_LunaMovement.LOOK,
+            _ => E_LunaMovement.IDLE
+        }; animatorOutBattle.SetInteger("moveWay", isInteracte);
+    }
+
     /// <summary>
     /// 对话
     /// </summary>
@@ -346,20 +305,36 @@ public class LunaController : ControllerBase
     {
         if (collision.transform.GetComponent<DialogBase>() != null)
         {
-            isDialog = true;
             dialog = collision.transform.GetComponent<DialogBase>();
-            UIManager.Instance.ShowOrHidePressTip(dialog, isDialog);
+            Debug.Log(dialog.DiaIndex);
+            if (dialog.DiaIndex != -1){
+                hasDialog = true;
+                UIManager.Instance.ShowOrHidePressTip(dialog, hasDialog);
+            }
         }
     }
-    private void PressTip(){
-        if (isDialog) TalkManager.Instance.LoadDialog(dialog);
+    private void PressTip()
+    {
+        if (hasDialog)
+        {
+            dialog.ConIndex = 0;
+            TalkManager.Instance.LoadDialog(dialog);
+        }
+    }
+    private void OnTriggerStay2D(Collider2D collision)
+    {
+        if (dialog.DiaIndex == -1)
+        {
+            hasDialog = false;
+            UIManager.Instance.ShowOrHidePressTip(dialog, hasDialog);
+        }
     }
     private void OnTriggerExit2D(Collider2D collision)
     {
         if (collision.transform.GetComponent<DialogBase>() != null)
         {
-            isDialog = false;
-            UIManager.Instance.ShowOrHidePressTip(dialog, isDialog);
+            hasDialog = false;
+            UIManager.Instance.ShowOrHidePressTip(dialog, hasDialog);
         }
     }
     public void OnPanleButtonClicked()
