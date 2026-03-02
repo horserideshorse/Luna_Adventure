@@ -18,8 +18,6 @@ public class DialogBase : MonoBehaviour
     protected GameObject pressTip;                //∞¥º¸Ã· æ
 
     public event Action<int> OnContentChange;
-    public event Action<int> OnInterSelfChange;
-    public event Action<int> OnInterTargetChange;
     public List<DialogInfo[]> NpcDialog { get => dialogInfoList; }
     
     public int DiaIndex 
@@ -35,33 +33,6 @@ public class DialogBase : MonoBehaviour
         set{
             _contentIndex = value;
             OnContentChange?.Invoke(_contentIndex);
-        }
-    }
-    public int InterSelf {
-        get => _interacteSelf;
-        set
-        {
-            _interacteSelf = value;
-            OnInterSelfChange?.Invoke(_interacteSelf);
-        }
-    }
-    public int InterTarget
-    {
-        get => _interacteTarget;
-        set
-        {
-            _interacteTarget = value;
-            OnInterTargetChange?.Invoke(_interacteTarget);
-        }
-    }
-    public GameObject PressTip { get => pressTip; }
-
-
-    protected virtual void Start()
-    {
-        if (gameObject.GetComponentInChildren<Canvas>()){
-            pressTip = gameObject.GetComponentInChildren<Canvas>().gameObject;
-            UIManager.Instance.ShowOrHidePressTip(this);
         }
     }
 
