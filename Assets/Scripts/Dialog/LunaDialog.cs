@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,17 +6,14 @@ public class LunaDialog : DialogBase
 {
     protected void Awake()
     {
-        dialogInfoList = new List<DialogInfo[]>()
+        dialogInfoList = new string[]
         {
-            new DialogInfo[]{
-                new() {name = "Luna", content = "½Ì³Ì0-0"}, //µÚ1¾ä
-                new() {name = "Luna", content = "½Ì³Ì0-1"}, //µÚ2¾ä
-                new() {name = "Luna", content = "½Ì³Ì0-2"}, //µÚ3¾ä
-                new() {name = "Luna", content = "½Ì³Ì0-3"}, //µÚ4¾ä
-                new() {name = "Luna", content = "½Ì³Ì0-4"}, //µÚ5¾ä
-            } //µÚ1¶Î
+            new("å“ˆå–½"), //ç¬¬1å¥
+            new("ä½ å¥½"), //ç¬¬2å¥
+            new("è¿‡çš„æ€Žä¹ˆæ ·"), //ç¬¬3å¥
+            new("ä»Šå¤©å¤©æ°”çœŸå¥½"), //ç¬¬1å¥
+            new("(â€¢_â€¢))"), //ç¬¬2å¥
+            new("`*>__<*â€²") //ç¬¬3å¥
         };
-        _dialogIndex = 0;
-        _contentIndex = 0;
     }
 }

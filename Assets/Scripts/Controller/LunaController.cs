@@ -2,6 +2,7 @@ using DG.Tweening;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using TMPro;
 using Unity.Mathematics;
 using Unity.VisualScripting;
@@ -36,7 +37,7 @@ public class LunaController : ControllerBase
     protected override void Start()
     {
         dog = gameObject.transform.Find("$Dog_0").GetComponent<SpriteRenderer>();
-        //dialog = gameObject.GetComponent<DialogBase>();
+        dialog = gameObject.GetComponent<DialogBase>();
         //TalkManager.Instance.LoadDialog(dialog);
         MouseManager.Instance.MouseKeyDownEvent += MouseKeyDownEvent;
         MouseManager.Instance.MouseKeyUpEvent += MouseKeyUpEvent;
@@ -132,6 +133,7 @@ public class LunaController : ControllerBase
     private IEnumerator Dialog()
     {
         yield return new WaitForSecondsRealtime(2f);
+        text.text = dialog.NpcDialog[RandomInt(0, dialog.NpcDialog.Length - 1)];
         text.gameObject.SetActive(false);
         isDialog = false;
     }
